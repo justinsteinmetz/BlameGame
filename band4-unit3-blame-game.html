@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Blame Game · Band 4 Unit 3</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,600;0,700;1,300&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --void:#060509;--deep:#0a090e;--panel:#10101a;--raised:#161624;--lift:#1e1e30;
+  --text:#eeeaf8;--mid:#7a7a9a;--muted:#3a3a56;--faint:#13131f;
+  --amber:#f6a623;--amber-d:#c07a10;--amber-dim:rgba(246,166,35,0.10);--amber-b:rgba(246,166,35,0.28);
+  --red:#e53e3e;--red-dim:rgba(229,62,62,0.10);--red-b:rgba(229,62,62,0.28);
+  --green:#38a169;--green-dim:rgba(56,161,105,0.10);--green-b:rgba(56,161,105,0.28);
+  --blue:#4299e1;--blue-dim:rgba(66,153,225,0.10);--blue-b:rgba(66,153,225,0.28);
+  --purple:#9f7aea;--purple-dim:rgba(159,122,234,0.10);--purple-b:rgba(159,122,234,0.28);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--void);font-family:'IBM Plex Sans',sans-serif;font-weight:300;
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;overflow-x:hidden;
+}
+/* CRT SCANLINES */
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:100;
+  background:repeating-linear-gradient(to bottom,transparent 0,transparent 2px,rgba(0,0,0,0.08) 2px,rgba(0,0,0,0.08) 4px);
+  mix-blend-mode:multiply;}
+/* VIGNETTE */
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse at 50% 50%,transparent 40%,rgba(0,0,0,0.6) 100%);}
+
+.screen{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:28px 16px 52px;width:100%;max-width:700px;position:relative;z-index:1;text-align:center}
+.screen.active{display:flex}
+@keyframes glitch{0%,100%{transform:none;opacity:1}92%{transform:none;opacity:1}94%{transform:translateX(2px) skewX(0.5deg);opacity:.9}96%{transform:translateX(-2px) skewX(-0.5deg);opacity:.95}98%{transform:none;opacity:1}}
+
+/* ── INTRO ── */
+.court-emblem{
+  width:90px;height:90px;border-radius:50%;border:3px solid var(--amber);
+  display:flex;align-items:center;justify-content:center;font-size:38px;
+  margin:0 auto 18px;
+  box-shadow:0 0 30px rgba(246,166,35,0.2),inset 0 0 20px rgba(246,166,35,0.06);
+  animation:pulse 3s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{box-shadow:0 0 30px rgba(246,166,35,0.2)}50%{box-shadow:0 0 50px rgba(246,166,35,0.35),inset 0 0 20px rgba(246,166,35,0.1)}}
+
+.court-tag{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.22em;text-transform:uppercase;color:var(--amber);margin-bottom:10px}
+.game-title{
+  font-family:'Bebas Neue',sans-serif;font-size:clamp(60px,14vw,96px);color:var(--text);
+  line-height:1;letter-spacing:0.04em;margin-bottom:4px;
+  animation:glitch 6s infinite;
+  text-shadow:0 0 40px rgba(246,166,35,0.1);
+}
+.game-sub{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--mid);letter-spacing:0.14em;margin-bottom:28px}
+
+.brief-panel{
+  background:var(--panel);border:1px solid rgba(246,166,35,0.15);
+  padding:22px 24px;margin-bottom:22px;width:100%;text-align:left;position:relative;
+  box-shadow:0 0 40px rgba(0,0,0,0.5),inset 0 1px 0 rgba(246,166,35,0.08);
+}
+.brief-panel::before{content:'BRIEFING';position:absolute;top:-10px;left:16px;background:var(--void);padding:0 8px;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.14em;color:var(--amber)}
+.brief-panel p{font-size:14px;color:var(--mid);line-height:1.7;margin-bottom:10px}
+.brief-panel p:last-child{margin-bottom:0}
+.ref-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px}
+.ref-cell{background:var(--raised);border:1px solid rgba(255,255,255,0.05);padding:10px 12px;text-align:center}
+.ref-name{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--amber);letter-spacing:0.08em;margin-bottom:4px;text-transform:uppercase}
+.ref-form{font-size:12px;color:var(--mid);font-style:italic}
+
+.btn-enter{
+  background:var(--amber);color:var(--void);font-family:'Bebas Neue',sans-serif;font-size:24px;
+  letter-spacing:0.08em;padding:14px 48px;border:none;cursor:pointer;
+  box-shadow:0 0 30px rgba(246,166,35,0.25),0 5px 0 var(--amber-d);
+  transition:all .15s;margin-bottom:8px;
+}
+.btn-enter:hover{box-shadow:0 0 50px rgba(246,166,35,0.4),0 7px 0 var(--amber-d);transform:translateY(-2px)}
+.btn-enter:active{transform:translateY(3px);box-shadow:0 0 20px rgba(246,166,35,0.2),0 2px 0 var(--amber-d)}
+.btn-skip{background:none;border:none;color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:11px;cursor:pointer;text-decoration:underline}
+
+/* ── GAME ── */
+.game-wrap{width:100%;max-width:680px}
+
+.court-hud{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.score-disp{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--amber);letter-spacing:0.1em}
+.case-disp{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:0.08em}
+
+.prog{height:3px;background:rgba(255,255,255,0.06);margin-bottom:20px;overflow:hidden}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--amber-d),var(--amber));transition:width .5s ease}
+
+/* INCIDENT CARD — glowing amber border */
+.incident{
+  background:var(--panel);border:1px solid rgba(246,166,35,0.2);
+  border-left:4px solid var(--amber);
+  padding:20px 22px;margin-bottom:14px;text-align:left;
+  box-shadow:0 0 30px rgba(0,0,0,0.4),-4px 0 20px rgba(246,166,35,0.08);
+  transition:border-color .3s,box-shadow .3s;
+}
+.incident.flash-correct{animation:flashGreen .5s ease}
+.incident.flash-wrong{animation:flashRed .5s ease}
+@keyframes flashGreen{0%,100%{border-left-color:var(--amber)}50%{border-left-color:var(--green);box-shadow:0 0 40px rgba(56,161,105,0.2),-4px 0 20px rgba(56,161,105,0.2)}}
+@keyframes flashRed{0%,100%{border-left-color:var(--amber)}50%{border-left-color:var(--red);box-shadow:0 0 40px rgba(229,62,62,0.2),-4px 0 20px rgba(229,62,62,0.2)}}
+
+.inc-eyebrow{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.inc-title{font-size:16px;color:var(--text);font-weight:600;margin-bottom:8px;line-height:1.4}
+.inc-active{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--mid);padding:10px 14px;background:var(--raised);border-left:3px solid var(--amber-b);margin:8px 0;font-style:italic;line-height:1.5}
+.inc-task{font-size:12px;color:var(--muted);margin-top:6px;font-style:italic}
+
+/* TYPE BUTTONS — three distinct colours */
+.type-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.16em;text-transform:uppercase;color:var(--mid);margin-bottom:8px;text-align:left}
+.type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.type-btn{
+  background:var(--panel);border:1px solid rgba(255,255,255,0.06);
+  color:var(--mid);padding:12px 8px;font-family:'IBM Plex Sans',sans-serif;
+  font-size:12px;font-weight:600;cursor:pointer;transition:all .18s;text-align:center;line-height:1.4;
+}
+.type-btn small{display:block;font-size:10px;font-family:'IBM Plex Mono',monospace;font-weight:400;margin-top:3px;opacity:0.65}
+.type-btn:hover{transform:translateY(-2px)}
+.type-btn[data-type="0"]:hover{border-color:var(--blue-b);color:var(--blue);background:var(--blue-dim)}
+.type-btn[data-type="1"]:hover{border-color:var(--purple-b);color:var(--purple);background:var(--purple-dim)}
+.type-btn[data-type="2"]:hover{border-color:var(--amber-b);color:var(--amber);background:var(--amber-dim)}
+.type-btn[data-type="0"].selected{border-color:var(--blue-b);color:var(--blue);background:var(--blue-dim)}
+.type-btn[data-type="1"].selected{border-color:var(--purple-b);color:var(--purple);background:var(--purple-dim)}
+.type-btn[data-type="2"].selected{border-color:var(--amber-b);color:var(--amber);background:var(--amber-dim)}
+.type-btn.correct-final{border-color:var(--green-b)!important;color:var(--green)!important;background:var(--green-dim)!important;box-shadow:0 0 16px rgba(56,161,105,0.15)}
+.type-btn.wrong-final{border-color:var(--red-b)!important;color:var(--red)!important;background:var(--red-dim)!important;opacity:0.5}
+
+.input-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.16em;text-transform:uppercase;color:var(--mid);margin-bottom:6px;text-align:left}
+.helper{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--amber);margin-bottom:8px;text-align:left;opacity:0.75}
+.passive-input{
+  width:100%;background:var(--raised);border:1px solid rgba(255,255,255,0.07);
+  color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:15px;font-weight:300;
+  padding:13px 16px;outline:none;transition:border-color .2s,box-shadow .2s;margin-bottom:12px;
+}
+.passive-input:focus{border-color:var(--amber-b);box-shadow:0 0 0 2px var(--amber-dim)}
+.passive-input.correct{border-color:var(--green-b);background:var(--green-dim);box-shadow:0 0 0 2px var(--green-dim)}
+.passive-input.wrong{border-color:var(--red-b);background:var(--red-dim);box-shadow:0 0 0 2px var(--red-dim)}
+
+/* VERDICT BOX */
+.verdict-box{padding:12px 16px;font-size:13px;line-height:1.6;display:none;margin-bottom:12px}
+.verdict-box.show{display:block;animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.verdict-box.correct{background:var(--green-dim);border-left:3px solid var(--green);color:var(--green)}
+.verdict-box.partial{background:var(--amber-dim);border-left:3px solid var(--amber);color:var(--amber)}
+.verdict-box.wrong{background:var(--red-dim);border-left:3px solid var(--red);color:var(--red)}
+.vb-explain{font-size:11px;margin-top:5px;opacity:0.8;color:var(--mid);font-family:'IBM Plex Mono',monospace}
+
+.action-row{display:flex;gap:8px}
+.file-btn{
+  flex:1;background:var(--amber);color:var(--void);font-family:'Bebas Neue',sans-serif;
+  font-size:20px;letter-spacing:0.08em;padding:13px;border:none;cursor:pointer;
+  box-shadow:0 0 20px rgba(246,166,35,0.2),0 4px 0 var(--amber-d);transition:all .15s;
+}
+.file-btn:hover{box-shadow:0 0 35px rgba(246,166,35,0.35),0 6px 0 var(--amber-d);transform:translateY(-2px)}
+.file-btn:active{transform:translateY(2px);box-shadow:0 0 15px rgba(246,166,35,0.15),0 2px 0 var(--amber-d)}
+.adj-btn{
+  flex:1;background:var(--panel);border:1px solid rgba(246,166,35,0.25);color:var(--amber);
+  font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:0.08em;padding:13px;
+  cursor:pointer;transition:all .15s;display:none;
+}
+.adj-btn.show{display:block;animation:fadeIn .2s ease}
+.adj-btn:hover{background:var(--amber);color:var(--void)}
+
+/* ── RESULTS ── */
+.gavel-icon{font-size:80px;margin-bottom:8px;animation:drop .5s cubic-bezier(0.34,1.56,0.64,1)}
+@keyframes drop{from{transform:scale(0) rotate(-30deg)}to{transform:scale(1) rotate(0)}}
+.final-pts{font-family:'Bebas Neue',sans-serif;font-size:88px;color:var(--amber);line-height:1;text-shadow:0 0 40px rgba(246,166,35,0.3)}
+.final-denom{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);margin-bottom:10px;letter-spacing:0.1em;text-transform:uppercase}
+.ruling-txt{background:var(--panel);border:1px solid rgba(246,166,35,0.15);border-left:4px solid var(--amber);padding:16px 20px;margin:14px 0 22px;font-size:14px;color:var(--text);text-align:left;line-height:1.6;box-shadow:0 0 20px rgba(0,0,0,0.3)}
+.transcript{width:100%;max-height:44vh;overflow-y:auto;margin-bottom:22px;display:flex;flex-direction:column;gap:6px}
+.tr-item{background:var(--panel);border:1px solid rgba(255,255,255,0.05);padding:10px 14px;text-align:left}
+.tr-active{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:3px}
+.tr-passive{font-size:13px;color:var(--text)}
+.tr-detail{font-size:11px;color:var(--amber);font-style:italic;margin-top:3px;font-family:'IBM Plex Mono',monospace}
+</style>
+</head>
+<body>
+
+<div class="screen active" id="intro">
+  <div class="court-emblem">⚖️</div>
+  <div class="court-tag">Band 4 · Unit 3 · The Golden State</div>
+  <div class="game-title">The Blame<br>Game</div>
+  <div class="game-sub">PASSIVE FORMS // COURT IS IN SESSION</div>
+  <div class="brief-panel">
+    <p>Something went wrong. Nobody wants to say who did it. Identify the passive type, then write the passive sentence to deflect the blame.</p>
+    <div class="ref-row">
+      <div class="ref-cell"><div class="ref-name">PP Passive</div><div class="ref-form">has/have been + pp</div></div>
+      <div class="ref-cell"><div class="ref-name">Personal</div><div class="ref-form">is said/thought to...</div></div>
+      <div class="ref-cell"><div class="ref-name">Modal</div><div class="ref-form">should/must be + pp</div></div>
+    </div>
+  </div>
+  <button class="btn-enter" onclick="startGame()">ENTER THE COURT</button>
+  <button class="btn-skip" onclick="startGame()">skip intro</button>
+</div>
+
+<div class="screen" id="game">
+  <div class="game-wrap">
+    <div class="court-hud">
+      <div class="score-disp">SCORE: <span id="scoreVal">0</span> / <span id="maxVal">20</span></div>
+      <div class="case-disp">CASE <span id="caseNum">01</span> OF 10</div>
+    </div>
+    <div class="prog"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+
+    <div class="incident" id="incidentCard">
+      <div class="inc-eyebrow">Incident Report</div>
+      <div class="inc-title" id="incTitle"></div>
+      <div class="inc-active" id="incActive"></div>
+      <div class="inc-task" id="incTask"></div>
+    </div>
+
+    <div class="type-label">Identify the passive type</div>
+    <div class="type-grid">
+      <button class="type-btn" data-type="0" id="tBtn0" onclick="selectType(0)">Present Perfect Passive<small>has/have been + pp</small></button>
+      <button class="type-btn" data-type="1" id="tBtn1" onclick="selectType(1)">Personal Passive<small>is said/thought to...</small></button>
+      <button class="type-btn" data-type="2" id="tBtn2" onclick="selectType(2)">Modal Passive<small>should/must/can be + pp</small></button>
+    </div>
+
+    <div class="input-label">Write the passive sentence</div>
+    <div class="helper" id="helperText"></div>
+    <input type="text" class="passive-input" id="passiveInput" placeholder="Write the passive sentence here…" onkeydown="if(event.key==='Enter')fileVerdict()">
+
+    <div class="verdict-box" id="verdictBox"><span id="vbText"></span><div class="vb-explain" id="vbExplain"></div></div>
+
+    <div class="action-row">
+      <button class="file-btn" id="fileBtn" onclick="fileVerdict()">FILE VERDICT</button>
+      <button class="adj-btn" id="adjBtn" onclick="nextRound()">NEXT CASE →</button>
+    </div>
+  </div>
+</div>
+
+<div class="screen" id="results">
+  <div class="gavel-icon">🔨</div>
+  <div class="final-pts" id="finalPts"></div>
+  <div class="final-denom">OUT OF 20 POINTS</div>
+  <div class="ruling-txt" id="rulingTxt"></div>
+  <div class="transcript" id="transcriptEl"></div>
+  <button class="btn-enter" onclick="startGame()">NEW SESSION</button>
+</div>
+
+<script>
+const CASES=[
+  {title:"The school computers stopped working.",active:"Someone has broken the school computers.",task:"Use the present perfect passive. Don't say who did it.",type:0,helper:"The school computers have been ___",keys:["have been broken","has been broken"],model:"The school computers have been broken.",explain:"PP passive: have/has + been + past participle."},
+  {title:"The rainforest is disappearing at alarming speed.",active:"People say the rainforest will disappear by 2100.",task:"Use the personal passive (is said to...).",type:1,helper:"The rainforest is said to ___",keys:["is said to"],model:"The rainforest is said to be disappearing fast.",explain:"Personal passive: is/are + said/thought/believed + to-infinitive."},
+  {title:"The river near the factory is seriously polluted.",active:"Someone must clean the river immediately.",task:"Use a passive with a modal verb.",type:2,helper:"The river must be ___",keys:["must be cleaned","must be"],model:"The river must be cleaned immediately.",explain:"Modal passive: modal + be + past participle."},
+  {title:"The lab report has gone missing from the teacher's desk.",active:"Someone has taken the lab report.",task:"Use the present perfect passive. Don't say who took it.",type:0,helper:"The lab report has been ___",keys:["has been taken","have been taken"],model:"The lab report has been taken.",explain:"PP passive: has/have + been + past participle."},
+  {title:"Scientists believe solar energy can solve the energy crisis.",active:"Scientists think solar energy can solve the energy crisis.",task:"Use the personal passive (is thought to...).",type:1,helper:"Solar energy is thought to ___",keys:["is thought to","are thought to"],model:"Solar energy is thought to be able to solve the energy crisis.",explain:"Personal passive: is thought/believed/said + to-infinitive."},
+  {title:"Plastic bottles keep ending up in the ocean.",active:"People should recycle plastic bottles.",task:"Use a passive with a modal verb.",type:2,helper:"Plastic bottles should be ___",keys:["should be recycled","should be"],model:"Plastic bottles should be recycled.",explain:"Modal passive: should + be + past participle."},
+  {title:"The test results have completely disappeared from the system.",active:"Someone has deleted all the test results.",task:"Use the present perfect passive.",type:0,helper:"All the test results have been ___",keys:["have been deleted","has been deleted"],model:"All the test results have been deleted.",explain:"PP passive: have + been + past participle."},
+  {title:"Experts predict electric cars will replace petrol cars.",active:"People know that electric cars will become the standard.",task:"Use the personal passive (are known to...).",type:1,helper:"Electric cars are known to ___",keys:["are known to","is known to"],model:"Electric cars are known to be the future of transport.",explain:"Personal passive: are known + to-infinitive."},
+  {title:"The window in the gym has been broken again.",active:"Somebody should fix the window immediately.",task:"Use a passive with a modal verb.",type:2,helper:"The window should be ___",keys:["should be fixed","must be fixed","can be fixed"],model:"The window should be fixed immediately.",explain:"Modal passive: modal + be + past participle."},
+  {title:"The endangered California condors are still under threat.",active:"People believe the condors can still be saved.",task:"Use the personal passive (are believed to...).",type:1,helper:"The condors are believed to ___",keys:["are believed to","is believed to"],model:"The condors are believed to be able to survive if protected.",explain:"Personal passive: are believed + to-infinitive."}
+];
+const TYPE_NAMES=['Present Perfect Passive','Personal Passive','Modal Passive'];
+
+let rounds,current,score,selType,answered,reviewItems;
+
+function shuffle(a){return[...a].sort(()=>Math.random()-0.5)}
+function setScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0)}
+
+function startGame(){
+  rounds=shuffle(CASES);current=0;score=0;selType=null;answered=false;reviewItems=[];
+  document.getElementById('maxVal').textContent=CASES.length*2;
+  setScreen('game');loadRound();
+}
+
+function loadRound(){
+  const r=rounds[current];
+  selType=null;answered=false;
+  document.getElementById('incTitle').textContent=r.title;
+  document.getElementById('incActive').textContent='"'+r.active+'"';
+  document.getElementById('incTask').textContent=r.task;
+  document.getElementById('helperText').textContent=r.helper;
+  document.getElementById('passiveInput').value='';
+  document.getElementById('passiveInput').className='passive-input';
+  document.getElementById('incidentCard').className='incident';
+  [0,1,2].forEach(i=>document.getElementById('tBtn'+i).className='type-btn');
+  document.getElementById('verdictBox').className='verdict-box';
+  document.getElementById('adjBtn').className='adj-btn';
+  document.getElementById('fileBtn').style.display='block';
+  document.getElementById('progFill').style.width=(current/rounds.length*100)+'%';
+  document.getElementById('scoreVal').textContent=score;
+  document.getElementById('caseNum').textContent=String(current+1).padStart(2,'0');
+  setTimeout(()=>document.getElementById('passiveInput').focus(),100);
+}
+
+function selectType(idx){
+  if(answered)return;
+  [0,1,2].forEach(i=>document.getElementById('tBtn'+i).className='type-btn');
+  document.getElementById('tBtn'+idx).className='type-btn selected';
+  selType=idx;
+}
+
+function fileVerdict(){
+  if(answered)return;
+  const r=rounds[current];
+  const val=document.getElementById('passiveInput').value.trim().toLowerCase();
+  if(!val){document.getElementById('passiveInput').focus();return;}
+  answered=true;
+  document.getElementById('fileBtn').style.display='none';
+  document.getElementById('adjBtn').className='adj-btn show';
+  const typeOk=selType===r.type;
+  const formOk=r.keys.some(k=>val.includes(k.toLowerCase()));
+  [0,1,2].forEach(i=>{
+    if(i===r.type)document.getElementById('tBtn'+i).className='type-btn correct-final';
+    else if(i===selType)document.getElementById('tBtn'+i).className='type-btn wrong-final';
+  });
+  const vb=document.getElementById('verdictBox');
+  let pts=0;
+  if(typeOk&&formOk){
+    pts=2;vb.className='verdict-box correct show';
+    document.getElementById('incidentCard').className='incident flash-correct';
+    document.getElementById('vbText').textContent='✓ Correct type and correct passive form.';
+  } else if(typeOk){
+    pts=1;vb.className='verdict-box partial show';
+    document.getElementById('vbText').textContent='Right type — but check the passive form.';
+  } else if(formOk){
+    pts=1;vb.className='verdict-box partial show';
+    const wrongName=selType!==null?TYPE_NAMES[selType]:'the wrong type';
+    document.getElementById('vbText').textContent=`Good passive form — but this is ${TYPE_NAMES[r.type]}, not ${wrongName}.`;
+  } else {
+    vb.className='verdict-box wrong show';
+    document.getElementById('incidentCard').className='incident flash-wrong';
+    const wrongNote=selType!==null?` You selected ${TYPE_NAMES[selType]}.`:'';
+    document.getElementById('vbText').textContent=`✗ Check both the type and the form.${wrongNote} Correct type: ${TYPE_NAMES[r.type]}.`;
+  }
+  document.getElementById('vbExplain').textContent=r.explain+' Model: '+r.model;
+  document.getElementById('passiveInput').className='passive-input '+(formOk?'correct':'wrong');
+  score+=pts;
+  document.getElementById('scoreVal').textContent=score;
+  reviewItems.push({
+    active:r.active,input:document.getElementById('passiveInput').value,
+    model:r.model,pts,
+    chosenType:selType!==null?TYPE_NAMES[selType]:null,
+    correctType:TYPE_NAMES[r.type]
+  });
+}
+
+function nextRound(){
+  current++;
+  if(current>=rounds.length){showResults();return;}
+  loadRound();
+}
+
+function showResults(){
+  const max=rounds.length*2;
+  document.getElementById('finalPts').textContent=score;
+  const pct=score/max;
+  const rulings=[
+    'Insufficient evidence. Review the three passive forms before your next session.',
+    'Partial verdict. The personal passive and modal passive need more attention.',
+    'Strong case. You have a solid grasp of all three passive forms.',
+    'Unanimous verdict: guilty of knowing your passive forms perfectly.'
+  ];
+  document.getElementById('rulingTxt').textContent=rulings[pct<0.4?0:pct<0.6?1:pct<1?2:3];
+  document.getElementById('transcriptEl').innerHTML=reviewItems.map(i=>`
+    <div class="tr-item">
+      <div class="tr-active">Active: ${i.active}</div>
+      <div class="tr-passive">Your passive: ${i.input} <strong>[${i.pts}pt${i.pts!==1?'s':''}]</strong></div>
+      ${i.pts<2?`<div class="tr-detail">Type: ${i.correctType}${i.chosenType&&i.chosenType!==i.correctType?' (you chose '+i.chosenType+')':''} · Model: ${i.model}</div>`:''}
+    </div>`).join('');
+  setScreen('results');
+}
+</script>
+</body>
+</html>
